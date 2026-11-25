@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Danh Sách Sản Phẩm</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #f4f6f8;
+      color: #1e293b;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      margin-bottom: 16px;
+    }
+
+    .search-box {
+      width: 100%;
+      max-width: 450px;
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box:focus {
+      border-color: #2563eb;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .product-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .product-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      background-color: #e2e8f0;
+    }
+
+    .product-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .product-price {
+      color: #dc2626;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .error-message {
+      text-align: center;
+      color: #dc2626;
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      padding: 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Cửa Hàng Công Nghệ</h1>
+      <input
+        type="text"
+        id="searchInput"
+        class="search-box"
+        placeholder="Nhập tên sản phẩm cần tìm..."
+        autocomplete="off"
+      />
+    </header>
+
+    <main>
+      <div id="errorMessage" class="error-message"></div>
+      <div id="productGrid" class="product-grid"></div>
+    </main>
+  </div>
+
+  <script>
+    // Hàm tạo ảnh placeholder SVG chạy offline 100%
+    const makeImg = (text, bg = "%23dbeafe", fg = "%231e40af") =>
+      `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='160'><rect width='100%' height='100%' fill='${bg}'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18' font-weight='bold' fill='${fg}'>${text}</text></svg>`;
+
+    const products = [
+      { id: 1, name: "Laptop Dell XPS 13", price: 28500000, image: makeImg("Laptop Dell XPS 13") },
+      { id: 2, name: "iPhone 15 Pro Max", price: 32990000, image: makeImg("iPhone 15 Pro Max", "%23fef3c7", "%2392400e") },
+      { id: 3, name: "Bàn phím cơ Keychron K2", price: 1850000, image: makeImg("Keychron K2", "%23dcfce7", "%23166534") },
+      { id: 4, name: "Chuột không dây Logitech MX Master 3S", price: 2390000, image: makeImg("Logitech MX Master 3S", "%23f3e8ff", "%236b21a8") },
+      { id: 5, name: "Tai nghe Sony WH-1000XM5", price: 7490000, image: makeImg("Sony WH-1000XM5", "%23ffe4e6", "%239f1239") },
+      { id: 6, name: "Màn hình LG UltraGear 27 inch", price: 6800000, image: makeImg("LG UltraGear 27", "%23e0f2fe", "%23075985") }
+    ];
+
+    const searchInput = document.getElementById("searchInput");
+    const productGrid = document.getElementById("productGrid");
+    const errorMessage = document.getElementById("errorMessage");
+
+    const formatPrice = (price) => price.toLocaleString("vi-VN") + " ₫";
+
+    function renderProducts(list, rawKeyword = "") {
+      productGrid.innerHTML = "";
+
+      if (list.length === 0) {
+        errorMessage.style.display = "block";
+        errorMessage.textContent = `Không tìm thấy sản phẩm nào khớp với từ khóa "${rawKeyword}".`;
+        return;
+      }
+
+      errorMessage.style.display = "none";
+      const fragment = document.createDocumentFragment();
+
+      list.forEach((product) => {
+        const card = document.createElement("article");
+        card.className = "product-card";
+
+        const img = document.createElement("img");
+        img.src = product.image;
+        img.alt = product.name;
+
+        const title = document.createElement("h2");
+        title.className = "product-name";
+        title.textContent = product.name;
+
+        const price = document.createElement("p");
+        price.className = "product-price";
+        price.textContent = formatPrice(product.price);
+
+        card.append(img, title, price);
+        fragment.appendChild(card);
+      });
+
+      productGrid.appendChild(fragment);
+    }
+
+    function debounce(fn, delay = 250) {
+      let timerId;
+      return (...args) => {
+        clearTimeout(timerId);
+        timerId = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    function handleSearch() {
+      const rawValue = searchInput.value;
+      const keyword = rawValue.trim().toLowerCase();
+
+      if (keyword === "") {
+        renderProducts(products);
+        return;
+      }
+
+      const filtered = products.filter((product) =>
+        product.name.toLowerCase().includes(keyword)
+      );
+
+      renderProducts(filtered, rawValue.trim());
+    }
+
+    searchInput.addEventListener("input", debounce(handleSearch, 250));
+    renderProducts(products);
+  </script>
+</body>
+</html>
